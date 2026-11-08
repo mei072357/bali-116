@@ -28,6 +28,10 @@ details{margin-top:7px;background:#fffdf8;border-radius:9px;padding:8px;font-siz
 <h1>🌴 峇里島 2027｜團長費用管理</h1>
 <div class="sub">10 人｜預估與實際分開｜現場只輸入一筆實際總額</div>
 </header>
+<div id="cloudPanel" style="margin:12px 14px;padding:12px;background:#fff;border:2px solid #302d2b;border-radius:15px">
+  <div style="font-weight:bold">☁️ 團員共用雲端同步</div>
+  <div id="cloudStatus" class="note" style="margin:6px 0">正在連接共用資料…</div>
+</div>
 
 <div class="tabs">
 <button class="tab active" data-page="home">全部總覽</button>
@@ -87,7 +91,48 @@ details{margin-top:7px;background:#fffdf8;border-radius:9px;padding:8px;font-siz
 </section>
 </div>
 
-<script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+import { getFirestore, doc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+const firebaseConfig = {
+  apiKey: "AIzaSyCvfPNe6OGBBHnaD2pH1n7X36sLew3ufGQ",
+  authDomain: "bali-cost.firebaseapp.com",
+  projectId: "bali-cost",
+  storageBucket: "bali-cost.firebasestorage.app",
+  messagingSenderId: "92898002439",
+  appId: "1:92898002439:web:dfc3ffcbbe4d4065338ca2",
+  measurementId: "G-HMQ6Q6RSFD"
+};
+const fbApp=initializeApp(firebaseConfig), db=getFirestore(fbApp);
+const sharedRef=doc(db,"tripData","bali2027");
+let remoteReady=false, applyingRemote=false, saveTimer=null;
+const statusEl=document.getElementById('cloudStatus');
+function status(msg){statusEl.textContent=msg}
+onSnapshot(sharedRef,snap=>{
+  if(snap.exists()){
+    applyingRemote=true;
+    const data=snap.data();
+    Object.keys(localStorage).filter(k=>k.startsWith('g_')||k.startsWith('a_')).forEach(k=>localStorage.removeItem(k));
+    Object.entries(data.values||{}).forEach(([k,v])=>{if((k.startsWith('g_')||k.startsWith('a_'))&&v!==null&&v!==undefined)localStorage.setItem(k,String(v))});
+    applyingRemote=false;
+    status('☁️ 已連線｜共用資料已同步');
+    remoteReady=true;updateHome();
+  }else{
+    remoteReady=true;
+    status('☁️ 已連線｜正在建立共用資料');
+    queueCloudSave();
+  }
+},err=>{status('雲端連線失敗：'+err.message+'。請確認 Firestore 公開讀寫規則已發布。');remoteReady=false});
+function queueCloudSave(){
+ if(!remoteReady||applyingRemote)return;
+ clearTimeout(saveTimer);
+ saveTimer=setTimeout(async()=>{
+  const values={};
+  Object.keys(localStorage).filter(k=>k.startsWith('g_')||k.startsWith('a_')).forEach(k=>values[k]=Number(localStorage.getItem(k)));
+  try{await setDoc(sharedRef,{values,updatedAt:new Date().toISOString()},{merge:true});status('☁️ 已同步｜大家共用同一份資料')}
+  catch(e){status('儲存失敗：'+e.message+'。請確認 Firestore 規則已發布。')}
+ },400);
+}
 const DAYS={
 1:[['Sun Sun 晚餐',2900]],
 2:[['瀑布門票',300],['梯田／Happy Swing 租衣費',3600],['Makan Bu Rus 午餐',2100],['Pondok Madu 晚餐',2200],['SPA',4500]],
@@ -208,6 +253,7 @@ function saveInput(e){
  const input=e.target,key=input.dataset.key,val=input.value.trim();
  if(localStorage.getItem(key)===(val===''?'':String(Number(val)))) return;
  if(val==='') localStorage.removeItem(key); else localStorage.setItem(key,String(Number(val)));
+ queueCloudSave();
  updateHome();
  const active=document.querySelector('.page.active')?.id;
  if(active==='days'){
@@ -220,5 +266,6 @@ document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>{
  updateHome(); if(b.dataset.page==='agu')buildAguButtons();
 }));
 buildDayButtons();buildAguButtons();updateHome();
+Object.assign(window,{showSummary,closeSummary,showDay,closeDay,showAguDay,closeAgu});
 </script>
 </body></html>
