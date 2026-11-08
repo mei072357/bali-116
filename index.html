@@ -12,7 +12,7 @@ header{padding:18px 16px;background:#fff;border-bottom:2px solid var(--ink)}h1{f
 .tabs{display:flex;gap:7px;overflow:auto;padding:10px;background:#fff;position:sticky;top:0;z-index:5}.tab{white-space:nowrap;padding:9px 13px;border:2px solid var(--ink);border-radius:17px;background:#fff;font-weight:bold}.tab.active{background:var(--pink)}
 .page{display:none;padding:14px}.page.active{display:block}.hero,.card{background:#fff;border:2px solid var(--ink);border-radius:18px;padding:14px;margin-bottom:12px}.hero{background:var(--blue)}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}.metric{background:#fff;border:1px solid #aaa;border-radius:13px;padding:10px;min-height:82px}.metric small{color:#666}.metric b{display:block;font-size:18px;margin-top:6px}
-.section-title{font-weight:bold;font-size:17px;margin:16px 2px 8px}.daybtn{width:100%;padding:15px;margin:5px 0;text-align:left;background:#fff;border:2px solid var(--ink);border-radius:15px;font-size:16px}.daybtn span{float:right;color:#666;font-size:14px}
+.section-title{font-weight:bold;font-size:17px;margin:16px 2px 8px}.daybtn{width:100%;padding:15px;margin:5px 0;text-align:left;background:#fff;border:2px solid var(--ink);border-radius:15px;font-size:16px}.daybtn span{float:right;color:#666;font-size:14px}.daystats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:10px}.daystats div{background:#f5f3ef;border-radius:9px;padding:7px 5px;text-align:center;font-size:13px;color:#555}.daystats b{display:block;font-size:15px;color:var(--ink);margin-top:3px}.daybtn{display:block}.trip-total{margin-top:9px;padding:9px;background:#fff0b8;border-radius:10px;font-size:13px;line-height:1.6}.trip-total b{font-size:14px}
 .item{padding:13px 0;border-bottom:1px dashed #bbb}.item:last-child{border-bottom:0}.itemhead{display:flex;justify-content:space-between;gap:8px;font-weight:bold;line-height:1.5}.itemhead span:last-child{white-space:nowrap}
 .row{display:grid;grid-template-columns:1fr 128px;gap:8px;align-items:center;margin-top:8px}.row label{font-size:15px}.row input{padding:10px;border:1px solid #777;border-radius:10px;width:100%;font-size:18px;background:#fff}
 .result{font-size:14px;margin-top:7px}.formula{font-size:13px;color:#666;margin:6px 0}.total{background:var(--yellow);padding:12px;border-radius:12px;margin-top:12px;font-weight:bold;line-height:1.7}.cum{font-size:14px;color:#555;margin-top:4px}
@@ -35,7 +35,7 @@ details{margin-top:7px;background:#fffdf8;border-radius:9px;padding:8px;font-siz
 
 <div class="tabs">
 <button class="tab active" data-page="home">全部總覽</button>
-<button class="tab" data-page="days">每日費用</button>
+<button class="tab" data-page="days">小成管理</button>
 <button class="tab" data-page="agu">阿谷小費</button>
 <button class="tab" data-page="help">使用方式</button>
 </div>
@@ -73,15 +73,15 @@ details{margin-top:7px;background:#fffdf8;border-radius:9px;padding:8px;font-siz
 </section>
 
 <section id="days" class="page">
-<div class="hero"><b>📅 每日費用｜小成管理</b><div class="note">點日期查看明細。餐廳保留預估金額；現場結帳只需輸入一筆實際總額。</div></div>
-<div id="dayButtons"></div>
+<div class="hero"><b>📅 小成管理</b><div class="note">點日期查看明細。餐廳保留預估金額；現場結帳只需輸入一筆實際總額。</div></div>
+<div class="note" style="margin:8px 2px">每日顯示：預估｜實際｜餘額</div><div id="dayButtons"></div>
 <div id="modalBackdrop" class="modal-backdrop" onclick="closeDay()"></div>
 <div id="dayModal" class="day-modal"><div class="modal-inner"><button class="modal-close" onclick="closeDay()">關閉 ×</button><div id="dayDetail"></div></div></div>
 </section>
 
 <section id="agu" class="page">
 <div class="hero"><b>👨 阿谷｜小費與零用錢</b><div class="note">點日期查看明細，不需要整頁往下滑。每筆清楚標示「每人」「每台」或「全團一筆」。</div></div>
-<div id="aguButtons"></div>
+<div class="note" style="margin:8px 2px">每日顯示：預估｜實際｜餘額</div><div id="aguButtons"></div>
 <div id="aguBackdrop" class="modal-backdrop" onclick="closeAgu()"></div>
 <div id="aguModal" class="day-modal"><div class="modal-inner"><button class="modal-close" onclick="closeAgu()">關閉 ×</button><div id="aguDetail"></div></div></div>
 </section>
@@ -177,6 +177,8 @@ function cumulativeGuideBudget(d){let s=0;for(let i=1;i<=d;i++)s+=guideDayBudget
 function cumulativeGuideBalance(d){return cumulativeGuideBudget(d)-cumulativeGuide(d)}
 function cumulativeAguBudget(d){let s=0;for(let i=1;i<=d;i++)s+=aguDayBudget(i);return s}
 function cumulativeAguBalance(d){return cumulativeAguBudget(d)-cumulativeAgu(d)}
+function guideGrandActual(){let s=0;for(let d=1;d<=6;d++)s+=guideDayActual(d);return s}
+function aguGrandActual(){let s=0;for(let i=0;i<AGU.length;i++)s+=(getNum(`a_${i}`)??0);return s}
 function updateHome(){
  let ga=0;for(let d=1;d<=6;d++)ga+=guideDayActual(d);
  let aa=0;AGU.forEach((x,i)=>aa+=(getNum(`a_${i}`)??0));
@@ -200,7 +202,10 @@ function showSummary(){document.getElementById('summaryBackdrop').classList.add(
 function closeSummary(){document.getElementById('summaryBackdrop').classList.remove('show');document.getElementById('summaryModal').classList.remove('show')}
 function buildDayButtons(){
  let out='';
- for(let d=1;d<=6;d++){out+=`<button class="daybtn" onclick="showDay(${d})"><b>D${d}｜${DAY_DATES[d]}</b><span>預估 ${fmt(guideDayBudget(d))}</span></button>`}
+ for(let d=1;d<=6;d++){
+   const budget=guideDayBudget(d), actual=guideDayActual(d), balance=budget-actual;
+   out+=`<button class="daybtn" onclick="showDay(${d})"><b>D${d}｜${DAY_DATES[d]}</b><div class="daystats"><div>預估<b>${fmt(budget)}</b></div><div>實際<b>${fmt(actual)}</b></div><div>餘額<b>${signed(balance)}</b></div></div>${d===6?`<div class="trip-total" onclick="event.stopPropagation()">📊 <b>全程總計（D1–D6）</b><br>預估 ${fmt(GUIDE_BUDGET)}　實際 ${fmt(guideGrandActual())}　餘額 ${signed(GUIDE_BUDGET-guideGrandActual())}</div>`:''}</button>`
+ }
  document.getElementById('dayButtons').innerHTML=out;
 }
 function showDay(d){
@@ -223,7 +228,8 @@ function closeDay(){document.getElementById('modalBackdrop').classList.remove('s
 function buildAguButtons(){
  let out='';
  for(let d=1;d<=6;d++){
-   out+=`<button class="daybtn" onclick="showAguDay(${d})"><b>D${d}｜${DAY_DATES[d]}</b><span>預估 ${fmt(aguDayBudget(d))}</span></button>`;
+   const budget=aguDayBudget(d), actual=aguDayActual(d), balance=budget-actual;
+   out+=`<button class="daybtn" onclick="showAguDay(${d})"><b>D${d}｜${DAY_DATES[d]}</b><div class="daystats"><div>預估<b>${fmt(budget)}</b></div><div>實際<b>${fmt(actual)}</b></div><div>餘額<b>${signed(balance)}</b></div></div>${d===6?`<div class="trip-total" onclick="event.stopPropagation()">📊 <b>全程總計（D1–D6）</b><br>預估 ${fmt(AGU_BUDGET)}　實際 ${fmt(aguGrandActual())}　餘額 ${signed(AGU_BUDGET-aguGrandActual())}</div>`:''}</button>`;
  }
  document.getElementById('aguButtons').innerHTML=out;
 }
@@ -255,6 +261,7 @@ function saveInput(e){
  if(val==='') localStorage.removeItem(key); else localStorage.setItem(key,String(Number(val)));
  queueCloudSave();
  updateHome();
+ buildDayButtons();buildAguButtons();
  const active=document.querySelector('.page.active')?.id;
  if(active==='days'){
    const m=key.match(/^g_(\d+)_/);if(m)showDay(Number(m[1]));
